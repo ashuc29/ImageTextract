@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Image</title>
+
+    <!-- Favicon Link -->
+    <link rel="icon" href="favicon.jpg" type="image/x-icon">
+
+    <style>
+        /* General body styling */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            position: relative;
+        }
+
+        /* Header styling */
+        header {
+            width: 100%;
+            background-color: #0c0962fa;
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        /* Main content container */
+        .container {
+            text-align: center;
+            margin-top: 40px;
+            margin-bottom: 30px;
+        }
+
+        /* Image preview styling */
+        #preview {
+            max-width: 300px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Button styling */
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3; /* Darker shade on hover */
+        }
+
+        /* Success message styling */
+        #message {
+            margin-top: 20px;
+            color: green;
+            font-weight: bold;
+        }
+
+        /* Footer styling */
+        footer {
+            width: 100%;
+            background-color: #0e0c1f;
+            color: white;
+            padding: 10px 0;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            z-index: 1000;
+            height: 100px;
+        }
+        .text p {
+            text-align: center;
+        }
+        footer p {
+            margin: 0;
+            font-size: 14px;
+            position: relative;
+            top: 50px;
+        }
+        .btn {
+            margin: 29px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <h1>Image to Textract using AWS Textract</h1>
+    </header>
+
+    <!-- Main content -->
+    <div class="container">
+        <!-- Image preview -->
+        <img id="preview" src="./textrack-gif.png" alt="Image Preview" />
+
+        <!-- File input -->
+        <div>
+            <input type="file" id="imageFile" accept="image/*" onchange="previewImage()" />
+        </div> 
+
+        <!-- Upload button -->
+        <div class="btn">
+            <button onclick="uploadImage()">Upload Image</button>
+        </div> 
+
+        <!-- Success message -->
+        <div id="message"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="text"><p>&copy; 2023 Image to Textract. All rights reserved.</p></div>
+    </footer>
+
+    <script>
+        // Function to preview the selected image
+
+        // Function to upload the image
+        function uploadImage() {
+            const fileInput = document.getElementById('imageFile');
+            const file = fileInput.files[0];  // Get the first file
+            const message = document.getElementById('message');
+
+            if (!file) {
+                alert('Please select a file first.');
+                return;
+            }
+
+            const fileName = file.name;
+
+            // Read the file as a data URL
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                const base64Image = event.target.result.split(',')[1];  // Extract Base64 string
+
+                // Make the API call
+                fetch("https://pb4bmcmlhl.execute-api.eu-west-1.amazonaws.com/dev/upload", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        message: "Image uploaded",
+                        image: base64Image,  // Send Base64 image data in the body
+                        fileName: fileName   // Send the file name in the body
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        console.log("Success:", data.message);
+                        message.textContent = `Image "${fileName}" uploaded successfully!`; // Show success message
+                    } else {
+                        console.error('No success message from API');
+                        message.textContent = 'Upload failed. Please try again.';
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    message.textContent = 'An error occurred during upload. Please try again.';
+                });
+            };
+
+            // Read the file as a data URL
+            reader.readAsDataURL(file);
+        }
+    </script>
+
+</body>
+</html>
